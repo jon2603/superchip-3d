@@ -523,7 +523,7 @@ function frame(now){
   const la=clamp((exP-.55)/.4);
   for(const p of Object.values(PARTS)){
     const g=SMZ.includes(p.key)?smZoom:p.labelGroup;
-    if(la<=.001||!g||!visibleChain(g)||(focusKey!=='all'&&!REGION[focusKey].includes(p.key))){p.el.style.opacity=0;continue;}
+    if(la<=.001||!g||!visibleChain(g)||(selCo?!selCo.parts.includes(p.key):(focusKey!=='all'&&!REGION[focusKey].includes(p.key)))){p.el.style.opacity=0;continue;}
     tmpV.copy(p.anchor); if(p.key==='dram'||p.key==='tsv') tmpV.y+=eHbm*6*.09; g.localToWorld(tmpV); tmpV.project(camera);
     if(tmpV.z>1||Math.abs(tmpV.x)>1.1||Math.abs(tmpV.y)>1.1){p.el.style.opacity=0;continue;}
     const px=(tmpV.x*.5+.5)*innerWidth, py=(-tmpV.y*.5+.5)*innerHeight;
