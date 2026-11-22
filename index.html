@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Explore an AI superchip in 3D: GPU dies, HBM4 memory stacks and the Vera CPU, and the companies that make each part.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Inside the AI Superchip: GPU, CPU & Memory in 3D">
+<meta property="og:description" content="Explode a Vera Rubin-class superchip and see who makes every piece of silicon: NVIDIA, TSMC, SK hynix, Samsung, Micron, ASML and more.">
+<meta property="og:image" content="https://jon2603.github.io/superchip-3d/preview.png">
+<meta property="og:url" content="https://jon2603.github.io/superchip-3d/">
+<meta name="twitter:card" content="summary_large_image">
+<title>Inside the Superchip — GPU · CPU · Memory</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(ellipse at 50% 35%,#16202f 0%,#0a0e15 55%,#04060a 100%);font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;color:#e6ecf7}
+  canvas{display:block}
+  #title{position:absolute;left:22px;top:16px;pointer-events:none;z-index:3}
+  #title h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.3px}
+  #title p{margin:4px 0 0;font-size:12.5px;color:#9fb0c8}
+  #controls{position:absolute;left:22px;bottom:20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;z-index:3}
+  button{font:600 13px Inter,"Segoe UI",system-ui,sans-serif;color:#e9f1ff;background:rgba(22,32,50,.84);border:1px solid rgba(120,170,255,.35);padding:9px 15px;border-radius:10px;cursor:pointer;backdrop-filter:blur(6px);transition:all .2s}
+  button:hover{background:rgba(40,70,120,.9);border-color:rgba(140,190,255,.7)}
+  button.primary{background:linear-gradient(135deg,#2a6cff,#18b4ff);border-color:transparent;box-shadow:0 6px 22px rgba(40,140,255,.35);min-width:110px}
+  button.off{opacity:.55}
+  .seg{display:flex;border:1px solid rgba(120,170,255,.35);border-radius:10px;overflow:hidden;background:rgba(22,32,50,.84)}
+  .seg button{border:none;border-radius:0;background:none;padding:9px 13px}
+  .seg button.act{background:rgba(42,108,255,.85)}
+  #hint{font-size:12px;color:#8193ad;margin-left:4px}
+  #hud{position:absolute;right:22px;top:16px;width:305px;background:rgba(12,18,30,.76);border:1px solid rgba(120,170,255,.22);border-radius:14px;padding:13px 15px;backdrop-filter:blur(8px);font-size:12.5px;z-index:3}
+  #hud h3{margin:0 0 8px;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#7f95b8}
+  .ph{position:relative;display:flex;gap:9px;align-items:flex-start;padding:6px 8px;border-radius:8px;color:#8fa2bf;transition:all .3s;overflow:hidden}
+  .ph b{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;background:rgba(255,255,255,.08)}
+  .ph.on{background:rgba(42,108,255,.18);color:#e8f1ff}
+  .ph.on b{background:#2a6cff;color:#fff}
+  .ph i{position:absolute;left:0;bottom:0;height:2px;background:#5ab8ff;width:0}
+  .spec{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.08);line-height:1.55;color:#b5c3d8}
+  .spec b{color:#e8eefc}
+  #legend{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);display:grid;grid-template-columns:1fr 1fr;gap:3px 8px}
+  #legend div{display:flex;align-items:center;gap:6px;color:#b5c3d8;font-size:11.5px}
+  #legend span{width:8px;height:8px;border-radius:50%}
+  #sc{position:absolute;left:22px;top:78px;bottom:76px;width:270px;display:flex;flex-direction:column;background:rgba(12,18,30,.76);border:1px solid rgba(120,170,255,.22);border-radius:14px;backdrop-filter:blur(8px);overflow:hidden;z-index:3}
+  #sc .hd{padding:12px 14px 9px;border-bottom:1px solid rgba(255,255,255,.07)}
+  #sc .hd span{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#7f95b8;font-weight:700;display:block}
+  #sc .hd small{font-size:11.5px;color:#8193ad}
+  #scList{overflow-y:auto;padding:2px 6px 10px}
+  #scList::-webkit-scrollbar{width:6px} #scList::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}
+  .cg{font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase;font-weight:700;margin:12px 8px 4px}
+  .co{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:12.8px;transition:background .15s}
+  .co:hover{background:rgba(255,255,255,.07)}
+  .co i{width:8px;height:8px;border-radius:50%;flex:none}
+  .co .n{flex:1;color:#dfe7f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .co .tk{font:500 10.5px Consolas,"SF Mono",monospace;color:#7f95b8;white-space:nowrap}
+  .co.hl{background:rgba(47,125,255,.2)}
+  .co.sel{background:rgba(255,255,255,.13);box-shadow:inset 3px 0 0 var(--c)}
+  #card{position:absolute;right:22px;bottom:20px;width:320px;background:rgba(10,16,28,.92);border:1px solid rgba(120,170,255,.3);border-radius:14px;padding:14px 16px;backdrop-filter:blur(8px);display:none;font-size:12.8px;line-height:1.45;box-shadow:0 12px 32px rgba(0,0,0,.45);z-index:4}
+  #card h2{margin:2px 0;font-size:18px}
+  #card .cat{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700}
+  #card .meta{font:500 11.5px Consolas,"SF Mono",monospace;color:#8fa2bf}
+  #card p{margin:8px 0;color:#c9d5e8}
+  #card .pp span{display:inline-block;margin:3px 4px 0 0;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.08);font-size:11.5px}
+  #card .chips span{display:inline-flex;align-items:center;gap:6px;margin:4px 5px 0 0;padding:4px 9px;border-radius:12px;border:1px solid;cursor:pointer;font-size:12px;background:rgba(255,255,255,.04)}
+  #card .chips span:hover{background:rgba(255,255,255,.12)}
+  #card .chips i{width:7px;height:7px;border-radius:50%}
+  #card .chips em{font:normal 10.5px Consolas,monospace;color:#8fa2bf}
+  #cx{position:absolute;right:8px;top:6px;background:none;border:none;color:#8fa2bf;font-size:18px;padding:4px 8px;cursor:pointer}
+  #tip{position:absolute;pointer-events:none;max-width:340px;padding:8px 12px;border-radius:10px;background:rgba(10,16,28,.94);border:1px solid rgba(90,184,255,.5);font-size:12.5px;line-height:1.4;opacity:0;transition:opacity .15s;box-shadow:0 8px 26px rgba(0,0,0,.45);z-index:6}
+  #tip b{color:#7fd0ff} #tip .mb{margin-top:4px;color:#ffd38a;font-size:12px}
+  #labels{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+  .lbl{position:absolute;left:0;top:0;font:600 12px/1.2 Inter,"Segoe UI",system-ui,sans-serif;color:#e8eefc;white-space:nowrap;will-change:transform,opacity}
+  .lbl .dot{position:absolute;width:7px;height:7px;border-radius:50%;background:#5ab8ff;box-shadow:0 0 10px #5ab8ff;left:-3.5px;top:-3.5px}
+  .lbl .ln{position:absolute;top:0;height:1px;background:rgba(120,190,255,.7)}
+  .lbl .tx{position:absolute;top:-12px;padding:4px 10px;border-radius:12px;background:rgba(12,18,30,.84);border:1px solid rgba(120,170,255,.38)}
+  .lbl .tx small{display:block;font-weight:500;font-size:10.5px;color:#9fc3ff;margin-top:2px}
+  .lbl.R .ln{left:0;width:var(--off)} .lbl.R .tx{left:var(--off)}
+  .lbl.L .ln{right:0;width:var(--off)} .lbl.L .tx{right:var(--off)}
+  .lbl.on .tx{background:rgba(42,108,255,.92);border-color:#9fd4ff} .lbl.on .dot{background:#fff}
+  @media (max-width:1000px){ #sc{width:220px} #hud{display:none} }
+  #disc{position:absolute;left:50%;transform:translateX(-50%);bottom:4px;font-size:10.5px;color:#6f819c;z-index:2;white-space:nowrap;pointer-events:none}
+  #err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#9fb0c8;font-size:14px}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="title">
+  <h1>Inside the Superchip · GPU, CPU &amp; Memory</h1>
+  <p>Modeled on NVIDIA Vera Rubin: one Rubin GPU (2 dies + 8 HBM4 stacks) linked to the Vera CPU and its SOCAMM2 memory</p>
+</div>
+
+<div id="sc"><div class="hd"><span>Who makes the silicon</span><small>Click a company to light up its parts</small></div><div id="scList"></div></div>
+
+<div id="hud">
+  <h3>One inference step, live</h3>
+  <div class="ph" data-i="0"><b>1</b><span>Weights stream in from HBM4 into the GPU</span><i></i></div>
+  <div class="ph" data-i="1"><b>2</b><span>Tensor cores multiply the matrices</span><i></i></div>
+  <div class="ph" data-i="2"><b>3</b><span>Dies sync, results leave over NVLink 6</span><i></i></div>
+  <div class="ph" data-i="3"><b>4</b><span>Vera CPU stages the next batch over NVLink-C2C</span><i></i></div>
+  <div class="spec">
+    <b>Rubin GPU</b> · 2 dies · 8× HBM4 · 288 GB · 22 TB/s<br>
+    <b>Vera CPU</b> · 88 cores · 176 threads · 1.5 TB LPDDR5X<br>
+    <b>NVLink-C2C</b> · 1.8 TB/s CPU ↔ GPU
+  </div>
+  <div id="legend">
+    <div><span style="background:#3cf0ff;box-shadow:0 0 6px #3cf0ff"></span>HBM4 data</div>
+    <div><span style="background:#e9f6ff;box-shadow:0 0 6px #e9f6ff"></span>Die-to-die</div>
+    <div><span style="background:#6ee7a8;box-shadow:0 0 6px #6ee7a8"></span>NVLink 6</div>
+    <div><span style="background:#ff5fd2;box-shadow:0 0 6px #ff5fd2"></span>NVLink-C2C</div>
+    <div><span style="background:#ffb21a;box-shadow:0 0 6px #ffb21a"></span>LPDDR5X</div>
+  </div>
+</div>
+
+<div id="card"><button id="cx">×</button><div id="cbody"></div></div>
+<div id="labels"></div>
+<div id="tip"></div>
+
+<div id="controls">
+  <button class="primary" id="bExplode">Explode</button>
+  <div class="seg" id="focus"><button data-f="all" class="act">All</button><button data-f="gpu">GPU</button><button data-f="mem">Memory</button><button data-f="cpu">CPU</button></div>
+  <button id="bTour">▶ Supply-chain tour</button>
+  <button id="bRotate" class="off">Auto-rotate: off</button>
+  <span id="hint">Drag to orbit · Scroll to zoom · Click a part to see who makes it</span>
+</div>
+<div id="disc">Educational illustration, simplified layout · Not investment advice · Sources: NVIDIA, TrendForce, Counterpoint, Tom’s Hardware (Nov 2026)</div>
+<div id="err">Could not load Three.js — this page needs an internet connection the first time it opens.</div>
+<script>window.addEventListener('error',e=>{ if(String(e.message||'').match(/import|module|fetch/i)) document.getElementById('err').style.display='flex'; });</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ================= renderer / scene ================= */
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); renderer.setClearColor(0,0);
+renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+const scene=new THREE.Scene();
+scene.environment=new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(renderer),0.04).texture;
+const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.1,300);
+camera.position.set(3,14,18.5);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.target.set(.5,.4,-.2); controls.enableDamping=true; controls.dampingFactor=.07; controls.minDistance=2.5; controls.maxDistance=60;
+controls.autoRotateSpeed=.45;
+scene.add(new THREE.HemisphereLight(0x9fb8ff,0x0c1016,.4));
+const key=new THREE.DirectionalLight(0xffffff,2.2); key.position.set(6,16,10); key.castShadow=true; key.shadow.mapSize.set(2048,2048);
+Object.assign(key.shadow.camera,{left:-15,right:15,top:15,bottom:-15,near:1,far:50}); key.shadow.bias=-.0004; key.shadow.normalBias=.02; scene.add(key);
+const rim=new THREE.DirectionalLight(0x5aa0ff,1.2); rim.position.set(-10,6,-10); scene.add(rim);
+const fill=new THREE.DirectionalLight(0xffe2c4,.45); fill.position.set(-4,4,12); scene.add(fill);
+const grid=new THREE.GridHelper(60,60,0x2a3850,0x162030); grid.position.y=-.21; grid.material.transparent=true; grid.material.opacity=.3; scene.add(grid);
+
+/* ================= helpers ================= */
+let seed=11; const rand=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+const rnd=(a,b)=>a+rand()*(b-a), clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const easeInOutCubic=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2, easeOutCubic=x=>1-Math.pow(1-x,3);
+function mkCanvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return[c,c.getContext('2d')];}
+function mkTex(c){const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;}
+
+/* ================= textures (procedural, no images) ================= */
+function boardTex(){const W=2048,H=1280,[c,g]=mkCanvas(W,H);g.fillStyle='#0a1712';g.fillRect(0,0,W,H);
+  for(let i=0;i<500;i++){let x=rnd(0,W),y=rnd(0,H);g.strokeStyle=`rgba(60,130,90,${rnd(.12,.35)})`;g.lineWidth=rnd(1.2,3);g.beginPath();g.moveTo(x,y);
+    for(let k=0;k<4;k++){const d=((rand()*8)|0)*Math.PI/4,L=rnd(30,200);x+=Math.cos(d)*L;y+=Math.sin(d)*L;g.lineTo(x,y);}g.stroke();}
+  for(let i=0;i<1200;i++){g.fillStyle='rgba(200,165,90,.5)';g.beginPath();g.arc(rnd(0,W),rnd(0,H),rnd(1.5,3),0,7);g.fill();}
+  g.fillStyle='rgba(230,236,230,.8)';g.font='600 30px "Segoe UI",Arial';g.fillText('SUPERCHIP BOARD · GPU0 · CPU0 · SOCAMM2 ×8',40,60);return mkTex(c);}
+function siliconTex(){const W=1024,H=1024,[c,g]=mkCanvas(W,H);g.fillStyle='#141a27';g.fillRect(0,0,W,H);
+  for(let i=0;i<W;i+=16){g.fillStyle=`rgba(90,120,170,${.05+rand()*.06})`;g.fillRect(i,0,1,H);g.fillRect(0,i,W,1);}
+  for(let i=0;i<500;i++){g.fillStyle=`rgba(110,140,200,${rnd(.03,.1)})`;g.fillRect(rnd(0,W),rnd(0,H),rnd(10,80),rnd(6,40));}return mkTex(c);}
+function sramTex(){const W=1024,H=256,[c,g]=mkCanvas(W,H);g.fillStyle='#0b1626';g.fillRect(0,0,W,H);
+  for(let x=4;x<W;x+=18)for(let y=4;y<H;y+=14){g.fillStyle=`rgba(${(90+rand()*40)|0},${(150+rand()*50)|0},255,${.35+rand()*.25})`;g.fillRect(x,y,14,10);}return mkTex(c);}
+function interposerTex(){const W=1100,H=820,[c,g]=mkCanvas(W,H);g.fillStyle='#18202f';g.fillRect(0,0,W,H);
+  for(let y=0;y<H;y+=3){g.fillStyle=`rgba(80,115,170,${.07+rand()*.13})`;g.fillRect(0,y,W,1);}
+  for(let x=0;x<W;x+=7){g.fillStyle=`rgba(120,90,170,${rand()*.07})`;g.fillRect(x,0,1,H);}
+  g.strokeStyle='rgba(230,190,110,.7)';g.lineWidth=5;g.strokeRect(6,6,W-12,H-12);return mkTex(c);}
+function substrateTex(){const W=1024,H=1024,[c,g]=mkCanvas(W,H);g.fillStyle='#1b2218';g.fillRect(0,0,W,H);
+  for(let i=0;i<800;i++){let x=rnd(0,W),y=rnd(0,H);g.strokeStyle=`rgba(150,170,110,${rnd(.06,.2)})`;g.lineWidth=rnd(.6,1.5);g.beginPath();g.moveTo(x,y);for(let k=0;k<3;k++){const d=((rand()*4)|0)*Math.PI/2,L=rnd(10,70);x+=Math.cos(d)*L;y+=Math.sin(d)*L;g.lineTo(x,y);}g.stroke();}
+  g.fillStyle='rgba(200,170,90,.35)';for(let x=30;x<W;x+=22)for(let y=30;y<H;y+=22)if(x<90||x>W-90||y<90||y>H-90){g.beginPath();g.arc(x,y,3,0,7);g.fill();}return mkTex(c);}
+function lpddrTex(){const[c,g]=mkCanvas(256,128);g.fillStyle='#17181c';g.fillRect(0,0,256,128);g.fillStyle='#c9ccd3';g.font='700 26px Arial';g.fillText('LPDDR5X',20,52);g.font='500 18px Consolas,monospace';g.fillText('32Gb ×16',20,86);g.beginPath();g.arc(232,20,6,0,7);g.fill();return mkTex(c);}
+function spriteTex(){const[c,g]=mkCanvas(64,64);const r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.25,'rgba(255,255,255,.75)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c);}
+
+/* ================= materials ================= */
+const std=o=>new THREE.MeshStandardMaterial(o), phys=o=>new THREE.MeshPhysicalMaterial(o);
+const MAT={
+  board:std({map:boardTex(),roughness:.6,metalness:.1}), boardSide:std({color:0x0b1a12,roughness:.7}),
+  sub:std({map:substrateTex(),roughness:.6,metalness:.1}), subSide:std({color:0x252b20,roughness:.7}),
+  interposer:phys({map:interposerTex(),metalness:.6,roughness:.3,iridescence:.7,iridescenceIOR:1.6,iridescenceThicknessRange:[100,650]}), interSide:std({color:0x3a4252,metalness:.5,roughness:.4}),
+  die:phys({map:siliconTex(),color:0xffffff,metalness:.7,roughness:.24,iridescence:.5,iridescenceIOR:1.5,iridescenceThicknessRange:[150,700],clearcoat:.4}), dieSide:std({color:0x4a5466,metalness:.5,roughness:.45}),
+  cpuDie:phys({map:siliconTex(),color:0xd8d0ff,metalness:.7,roughness:.24,iridescence:.6,iridescenceIOR:1.45,iridescenceThicknessRange:[250,800],clearcoat:.4}),
+  sram:std({map:sramTex(),metalness:.4,roughness:.35,emissive:0x0a2448,emissiveIntensity:.6}),
+  phy:std({color:0xd8a24a,metalness:1,roughness:.25,emissive:0x3a2200,emissiveIntensity:.5}),
+  d2d:std({color:0xbfe9ff,metalness:.6,roughness:.25,emissive:0x0d3d5a,emissiveIntensity:.7}),
+  chiplet:phys({map:siliconTex(),color:0xbfe8d0,metalness:.7,roughness:.25,iridescence:.5,iridescenceThicknessRange:[200,600]}),
+  hbm:phys({color:0x2d3546,metalness:.65,roughness:.28,iridescence:.4,iridescenceThicknessRange:[200,600]}), hbmSec:std({color:0x7a8495,metalness:.5,roughness:.4}),
+  hbmBase:std({color:0x3c2e52,metalness:.55,roughness:.35,emissive:0x1a0f2a,emissiveIntensity:.5}),
+  tsv:std({color:0xe8a85a,metalness:1,roughness:.22,emissive:0x3a1c00,emissiveIntensity:.5}),
+  scf:std({color:0x5fe0ff,metalness:.3,roughness:.4,emissive:0x0b5068,emissiveIntensity:.8}),
+  memctl:std({color:0xffbf4a,metalness:.8,roughness:.3,emissive:0x4a2a00,emissiveIntensity:.6}),
+  c2c:std({color:0xff7fdc,metalness:.6,roughness:.3,emissive:0x5a0a44,emissiveIntensity:.7}),
+  pcie:std({color:0x9fa8ff,metalness:.6,roughness:.3,emissive:0x101a4a,emissiveIntensity:.6}),
+  lane:std({color:0x8a5a3a,metalness:.9,roughness:.35}),
+  socPcb:std({color:0x1d3a2b,roughness:.55,metalness:.2}), lpddrTop:std({map:lpddrTex(),roughness:.45,metalness:.2}), lpddrSide:std({color:0x15161a,roughness:.5}),
+  gold:std({color:0xffc35a,metalness:1,roughness:.16}),
+  smBase:phys({color:0x1b2232,metalness:.7,roughness:.25,iridescence:.4,iridescenceThicknessRange:[200,600]}),
+  tensor:std({color:0xff9a3c,metalness:.3,roughness:.35,emissive:0xff6a1a,emissiveIntensity:.7}),
+  cuda:std({color:0x45d6ff,metalness:.3,roughness:.4,emissive:0x0d6a8a,emissiveIntensity:.6}),
+  regfile:std({color:0xb98cff,metalness:.4,roughness:.35,emissive:0x3a1a7a,emissiveIntensity:.6}),
+  l1:std({color:0x6ee7a8,metalness:.4,roughness:.35,emissive:0x0d5a38,emissiveIntensity:.6}),
+  tile:new THREE.MeshBasicMaterial({color:0xffffff,toneMapped:false})
+};
+
+/* ================= parts system ================= */
+const root=new THREE.Group(); scene.add(root);
+const PARTS={}, pickables=[], explodeGroups=[];
+function def(k,name,info,label){PARTS[k]={key:k,name,info,label,meshes:[],labelGroup:null};}
+function G(vec,parent=root){const g=new THREE.Group();g.userData.ex=new THREE.Vector3(...vec);parent.add(g);explodeGroups.push(g);return g;}
+function cloneMat(m){const cache=new Map();const one=x=>{if(!cache.has(x)){const c=x.clone();if(c.emissive){c.userData.e0=c.emissive.clone();c.userData.ei0=c.emissiveIntensity;}cache.set(x,c);}return cache.get(x);};return Array.isArray(m)?m.map(one):one(m);}
+function reg(mesh,k,group,shadow=true){mesh.material=cloneMat(mesh.material);mesh.userData.part=k;mesh.castShadow=shadow;mesh.receiveShadow=true;group.add(mesh);
+  if(k){PARTS[k].meshes.push(mesh);pickables.push(mesh);if(!PARTS[k].labelGroup)PARTS[k].labelGroup=group;}return mesh;}
+function box(k,group,w,h,d,x,y,z,mat,shadow=true){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);return reg(m,k,group,shadow);}
+function planarUV(geo,cx,cz,[X0,X1,Z0,Z1]){const p=geo.attributes.position,n=geo.attributes.normal,uv=geo.attributes.uv;for(let i=0;i<p.count;i++)if(Math.abs(n.getY(i))>.5)uv.setXY(i,(p.getX(i)+cx-X0)/(X1-X0),1-(p.getZ(i)+cz-Z0)/(Z1-Z0));}
+function cutBox(k,group,w,h,d,x,y,z,mats,cut,uvRect){
+  const x0=x-w/2,x1=x+w/2,z0=z-d/2,z1=z+d/2,pcs=[];
+  if(!cut||x1<=cut.x||z1<=cut.z)pcs.push([x0,x1,z0,z1,-1]);
+  else{if(cut.z>z0)pcs.push([x0,x1,z0,Math.min(z1,cut.z),4]);if(cut.x>x0)pcs.push([x0,Math.min(x1,cut.x),Math.max(z0,cut.z),z1,0]);}
+  const out=[];for(const[a,b,c,e,sf]of pcs){if(b-a<1e-4||e-c<1e-4)continue;const geo=new THREE.BoxGeometry(b-a,h,e-c),cx=(a+b)/2,cz=(c+e)/2;if(uvRect)planarUV(geo,cx,cz,uvRect);
+    const s=mats.side,arr=[s,s,mats.top||s,mats.bottom||s,s,s];if(sf>=0&&mats.sec)arr[sf]=mats.sec;const m=new THREE.Mesh(geo,arr);m.position.set(cx,y,cz);out.push(reg(m,k,group));}return out;}
+function inst(k,group,geo,mat,pts,shadow=true){const im=new THREE.InstancedMesh(geo,mat,pts.length),d=new THREE.Object3D();
+  pts.forEach((p,i)=>{d.position.set(p[0],p[1],p[2]);d.rotation.set(0,p[3]||0,0);d.updateMatrix();im.setMatrixAt(i,d.matrix);});im.instanceMatrix.needsUpdate=true;return reg(im,k,group,shadow);}
+
+/* ================= parts ================= */
+const GX=-4.5, CX=5.6, CZ=-.6;
+def('gpudie','Rubin GPU compute dies (×2)','Two reticle-sized dies on TSMC N3P, joined so software sees one GPU: 50 PFLOPS of NVFP4 inference.',{a:[GX-3.05,.5,-1.6],s:'L',o:60});
+def('sm','Streaming multiprocessors','The GPU’s worker blocks, each holding tensor cores, CUDA cores and fast local memory. The tiles light up with load.',{a:[GX-1.2,.68,1.4],s:'L',o:150});
+def('l2','L2 cache','Shared on-chip SRAM that keeps hot data close so the SMs don’t wait on HBM.',{a:[GX-2.4,.68,0],s:'L',o:110});
+def('hbmphy','HBM4 controllers & PHY','Edge circuitry driving the 2,048-bit HBM4 interfaces: 22 TB/s for the whole GPU.',{a:[GX+2.95,.68,-1.8],s:'R',o:150});
+def('d2d','Die-to-die link','An ultra-wide bridge along the seam that makes the two dies behave as one GPU.',{a:[GX+.15,.68,-1.2],s:'R',o:190});
+def('nvl6chip','NVLink 6 I/O chiplet','The SerDes chiplet that links this GPU to the rest of the rack at 3.6 TB/s.',{a:[GX-1.1,.56,2.78],s:'L',o:80});
+def('c2cchip','NVLink-C2C chiplet','Houses the SerDes for the coherent link to the Vera CPU.',{a:[GX+1.1,.56,-2.78],s:'R',o:60});
+def('interposer','CoWoS-L interposer','TSMC’s silicon bridges under the dies and HBM, carrying thousands of short wires between them.',{a:[GX-4.3,.21,2.6],s:'L',o:50});
+def('hbmbase','HBM4 base logic die','The bottom die of each stack. It runs the DRAM layers and talks to the GPU over 2,048 wires, and is now built on logic processes.',{a:[GX+3.7,.3,-2.25],s:'R',o:110});
+def('dram','HBM4 DRAM layers (12-high)','Twelve thinned DRAM dies stacked on top of each other. Eight stacks give the GPU 288 GB.',{a:[GX+4.17,.55,.75],s:'R',o:60});
+def('tsv','Through-silicon vias','Copper pillars carrying data and power straight through every DRAM layer.',{a:[GX+3.7,.47,2.25],s:'R',o:90});
+def('tensor','Tensor cores','Matrix-multiply engines that do the bulk of AI math, down to 4-bit NVFP4.',{a:[.55,.1,-.55],s:'R',o:130});
+def('cuda','CUDA cores','General-purpose ALUs for everything that isn’t a big matrix multiply.',{a:[-.55,.08,-.25],s:'L',o:120});
+def('regfile','Register file','The fastest memory on the chip, holding each thread’s working values.',{a:[-.95,.08,.55],s:'L',o:60});
+def('l1','L1 cache / shared memory','A per-SM scratchpad where tiles of the matrices are staged for the tensor cores.',{a:[1.1,.08,1.3],s:'R',o:60});
+def('cpudie','Vera CPU die','A monolithic, NVIDIA-designed Arm-compatible CPU that orchestrates the GPUs and feeds them data.',{a:[CX+1.8,.35,CZ+1.2],s:'R',o:60});
+def('cpucore','Olympus CPU cores (×88)','Custom Arm-compatible cores with 2 MB of L2 each, 176 threads in total.',{a:[CX-.9,.47,CZ+.4],s:'L',o:170});
+def('l3','L3 cache (164 MB)','Shared cache slices sitting next to every core.',{a:[CX+1.2,.47,CZ-.7],s:'R',o:120});
+def('scf','Scalable Coherency Fabric','The on-die mesh connecting cores, cache, memory and I/O.',{a:[CX+.2,.47,CZ-1.2],s:'R',o:190});
+def('memctl','LPDDR5X controllers','Drive the SOCAMM2 modules at up to 1.2 TB/s.',{a:[CX+1.4,.47,CZ+1.7],s:'R',o:80});
+def('c2c','NVLink-C2C link','A coherent CPU↔GPU link at 1.8 TB/s, so the GPU can read CPU memory directly.',{a:[-.4,.02,-3.9],s:'R',o:60});
+def('pcie','PCIe 6 / CXL I/O','Connects storage, network cards and the BlueField DPU.',{a:[CX+1.7,.47,CZ-1.3],s:'R',o:60});
+def('socamm','SOCAMM2 LPDDR5X modules','Swappable low-power memory modules, up to 1.5 TB per Vera CPU.',{a:[CX+2.3,.17,CZ+4.3],s:'R',o:60});
+def('nvl6','NVLink 6 lanes','Wires heading to the NVLink switches that join 72 GPUs into one rack-scale machine.',{a:[GX+1.6,.02,5.8],s:'R',o:60});
+
+const gStatic=new THREE.Group(); root.add(gStatic);
+const gDies=G([0,1.8,0]), gHbmL=G([-1.3,.55,0]), gHbmR=G([1.3,.55,0]), gIoF=G([0,1.0,.8]), gIoB=G([0,1.0,-.8]), gInt=G([0,.4,0]),
+      gCpu=G([0,1.7,0]), gSocB=G([0,.8,-.6]), gSocF=G([0,.8,.6]);
+
+/* ---- board + substrates (context, not hoverable) ---- */
+{ const b=cutBox(null,gStatic,22,.2,13,.5,-.1,0,{side:MAT.boardSide,top:MAT.board},null,[-10.5,11.5,-6.5,6.5]); b.forEach(m=>{m.userData.part=null;});
+  cutBox(null,gStatic,9.6,.16,7.6,GX,.08,0,{side:MAT.subSide,top:MAT.sub},null,[GX-4.8,GX+4.8,-3.8,3.8]);
+  cutBox(null,gStatic,5.2,.16,5.2,CX,.08,CZ,{side:MAT.subSide,top:MAT.sub},null,[CX-2.6,CX+2.6,CZ-2.6,CZ+2.6]);
+  pickables.length=0; }
+
+/* ---- interposer ---- */
+cutBox('interposer',gInt,8.6,.1,6.4,GX,.21,0,{side:MAT.interSide,top:MAT.interposer},null,[GX-4.3,GX+4.3,-3.2,3.2]);
+
+/* ---- GPU dies + floorplan ---- */
+const smTiles=[]; let smSource=new THREE.Vector3();
+for(const s of [-1,1]){
+  const dx=GX+s*1.55;
+  cutBox('gpudie',gDies,3.0,.42,4.4,dx,.47,0,{side:MAT.dieSide,top:MAT.die},null);
+  box('hbmphy',gDies,.2,.008,4.2,GX+s*2.92,.684,0,MAT.phy,false);
+  box('d2d',gDies,.18,.008,4.2,GX+s*.16,.684,0,MAT.d2d,false);
+  const l2=box('l2',gDies,2.45,.008,.66,GX+s*1.57,.684,0,MAT.sram,false);
+  const pts=[]; for(let c=0;c<8;c++)for(let r=0;r<5;r++)for(const zs of [-1,1]){ pts.push([GX+s*(.42+c*.3125),.686,zs*(.53+r*.34)]); }
+  const tm=inst('sm',gDies,new THREE.BoxGeometry(.25,.008,.27),MAT.tile,pts,false);
+  for(let i=0;i<pts.length;i++)tm.setColorAt(i,new THREE.Color(0x0a1a2a));
+  tm.userData.phase=pts.map(()=>rand()*Math.PI*2); smTiles.push(tm);
+  if(s>0) smSource.set(GX+.42+2*.3125,.69,.53+3*.34);
+}
+const l2Glow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({color:0x5ab8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false}));
+l2Glow.rotation.x=-Math.PI/2; l2Glow.scale.set(5.6,.7,1); l2Glow.position.set(GX,.692,0); gDies.add(l2Glow);
+
+/* ---- I/O chiplets ---- */
+cutBox('nvl6chip',gIoF,2.2,.3,.55,GX,.41,2.78,{side:MAT.dieSide,top:MAT.chiplet},null);
+cutBox('c2cchip',gIoB,2.2,.3,.55,GX,.41,-2.78,{side:MAT.dieSide,top:MAT.chiplet},null);
+
+/* ---- HBM4 stacks ---- */
+const hbmLayers=[], tsvRods=[];
+const HBMZ=[-2.25,-.75,.75,2.25];
+for(const s of [-1,1]){
+  const grp=s<0?gHbmL:gHbmR, hx=GX+s*3.7;
+  for(const z of HBMZ){
+    const cut=z>2?{x:-99,z:z}:null;
+    cutBox('hbmbase',grp,.95,.08,1.3,hx,.30,z,{side:MAT.hbmBase,sec:MAT.hbmBase},cut);
+    for(let L=0;L<12;L++){
+      const y=.34+.006+L*.028+.011;
+      for(const m of cutBox('dram',grp,.95,.022,1.3,hx,y,z,{side:MAT.hbmSec,top:MAT.hbm,sec:MAT.hbmSec},cut)){ m.userData.layer=L+1; m.userData.y0=y; hbmLayers.push(m); }
+    }
+    if(cut) for(let i=0;i<8;i++){
+      const r=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,1,10),MAT.tsv); r.position.set(hx-.38+i*.108,.26,z); reg(r,'tsv',grp); tsvRods.push(r);
+    }
+  }
+}
+
+/* ---- SM magnified (appears when exploded) ---- */
+const smZoom=new THREE.Group(); smZoom.position.set(GX+1.55,3.9,.4); root.add(smZoom); smZoom.visible=false;
+box(null,smZoom,2.5,.08,2.9,0,0,0,MAT.smBase);
+for(const [qx,qz] of [[-.6,-.85],[.6,-.85],[-.6,.25],[.6,.25]]){
+  box('tensor',smZoom,.48,.16,.48,qx+.22,.12,qz-.05,MAT.tensor);
+  const cc=[]; for(let i=0;i<4;i++)for(let j=0;j<4;j++)cc.push([qx-.38+i*.1,.085,qz-.25+j*.1]);
+  inst('cuda',smZoom,new THREE.BoxGeometry(.075,.07,.075),MAT.cuda,cc);
+  box('regfile',smZoom,.9,.06,.16,qx,.07,qz+.32,MAT.regfile);
+}
+box('l1',smZoom,2.2,.08,.34,0,.08,1.15,MAT.l1);
+const zoomLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),new THREE.LineDashedMaterial({color:0x9fd4ff,dashSize:.12,gapSize:.08,transparent:true,opacity:.8}));
+scene.add(zoomLine);
+
+/* ---- Vera CPU ---- */
+cutBox('cpudie',gCpu,3.6,.3,3.6,CX,.31,CZ,{side:MAT.dieSide,top:MAT.cpuDie},null);
+const cpuTiles=[];
+{ const cores=[],l3s=[];
+  for(let c=0;c<11;c++)for(let r=0;r<8;r++){ const x=CX-1.43+c*.2727, z=CZ-1.27+r*.3628; cores.push([x-.035,.464,z]); l3s.push([x+.1,.464,z]); }
+  const tm=inst('cpucore',gCpu,new THREE.BoxGeometry(.15,.008,.24),MAT.tile,cores,false);
+  for(let i=0;i<cores.length;i++)tm.setColorAt(i,new THREE.Color(0x140a22)); tm.userData.phase=cores.map(()=>rand()*Math.PI*2); cpuTiles.push(tm);
+  inst('l3',gCpu,new THREE.BoxGeometry(.06,.008,.24),MAT.sram,l3s,false);
+  const mesh=[]; for(let r=0;r<=8;r++)mesh.push([CX,.462,CZ-1.45+r*.3628,0]); for(let c=0;c<=11;c++)mesh.push([CX-1.57+c*.2727,.462,CZ,Math.PI/2]);
+  const g1=inst('scf',gCpu,new THREE.BoxGeometry(3.05,.006,.018),MAT.scf,mesh.slice(0,9),false);
+  const g2=new THREE.InstancedMesh(new THREE.BoxGeometry(2.95,.006,.018),g1.material,12); const d=new THREE.Object3D();
+  mesh.slice(9).forEach((p,i)=>{d.position.set(p[0],p[1],p[2]);d.rotation.set(0,p[3],0);d.updateMatrix();g2.setMatrixAt(i,d.matrix);}); g2.userData.part='scf'; gCpu.add(g2); PARTS.scf.meshes.push(g2); pickables.push(g2);
+  box('memctl',gCpu,3.3,.008,.16,CX,.464,CZ-1.68,MAT.memctl,false); box('memctl',gCpu,3.3,.008,.16,CX,.464,CZ+1.68,MAT.memctl,false);
+  box('c2c',gCpu,.16,.008,3.0,CX-1.68,.464,CZ,MAT.c2c,false);
+  box('pcie',gCpu,.16,.008,3.0,CX+1.68,.464,CZ,MAT.pcie,false);
+}
+
+/* ---- SOCAMM2 modules ---- */
+const socX=[CX-1.8,CX-.6,CX+.6,CX+1.8], socZ={b:CZ-4.4,f:CZ+4.3};
+for(const [row,grp] of [['b',gSocB],['f',gSocF]]) for(const mx of socX){
+  const mz=socZ[row];
+  box('socamm',grp,1.05,.05,2.2,mx,.025,mz,MAT.socPcb);
+  box('socamm',grp,.9,.01,.12,mx,.003,mz+(row==='b'?1.0:-1.0),MAT.gold,false);
+  for(const o of [-.78,-.26,.26,.78]){ const m=new THREE.Mesh(new THREE.BoxGeometry(.8,.1,.42),[MAT.lpddrSide,MAT.lpddrSide,MAT.lpddrTop,MAT.lpddrSide,MAT.lpddrSide,MAT.lpddrSide]); m.position.set(mx,.1,mz+o); reg(m,'socamm',grp); }
+}
+
+/* ---- NVLink-C2C bundle + NVLink 6 lanes (on the board) ---- */
+const c2cCurves=[];
+for(let i=0;i<10;i++){ const o=(i-4.5)*.07;
+  const c=new THREE.CatmullRomCurve3([new THREE.Vector3(GX+o*3,.012,-3.85),new THREE.Vector3(GX+.6+o*3,.012,-4.6+o),new THREE.Vector3(-.5,.012,-4.3+o),new THREE.Vector3(1.6,.012,-2.4+o),new THREE.Vector3(CX-2.6,.012,CZ+o*4)]);
+  c2cCurves.push(c); reg(new THREE.Mesh(new THREE.TubeGeometry(c,80,.022,6,false),MAT.lane),'c2c',gStatic); }
+const nvlCurves=[];
+for(let i=0;i<14;i++){ const o=(i-6.5)*.15;
+  const c=new THREE.CatmullRomCurve3([new THREE.Vector3(GX+o,.012,3.85),new THREE.Vector3(GX+o*1.2,.012,4.9),new THREE.Vector3(GX+o*1.6,.012,6.45)]);
+  nvlCurves.push(c); reg(new THREE.Mesh(new THREE.TubeGeometry(c,30,.02,6,false),MAT.lane),'nvl6',gStatic); }
+
+/* ================= supply chain ================= */
+const CATS={design:['Chip design','#7cc4ff'],fab:['Manufacturing (foundry)','#ffd166'],mem:['Memory makers','#3cf0ff'],tools:['Equipment & design tools','#ff7aa8']};
+const NV_PARTS=['gpudie','sm','l2','hbmphy','d2d','nvl6chip','c2cchip','tensor','cuda','regfile','l1','cpudie','cpucore','l3','scf','memctl','c2c','pcie','nvl6'];
+const SUP=[
+ {id:'nvda',n:'NVIDIA',tk:'NVDA US',cc:'US',cat:'design',parts:NV_PARTS,d:'Designs all the logic you see: both Rubin GPU dies with their SMs and tensor cores, the NVLink chiplets, and the Vera CPU. It is fabless, so TSMC manufactures the silicon and the memory comes from the three DRAM makers.'},
+ {id:'arm',n:'Arm',tk:'ARM US',cc:'UK',cat:'design',parts:['cpucore','cpudie'],d:'Vera’s 88 custom Olympus cores run the Arm instruction set (Armv9-class) under an Arm architecture license. NVIDIA designs the cores itself.'},
+ {id:'amd',n:'AMD (rival stack)',tk:'AMD US',cc:'US',cat:'design',rival:true,parts:['gpudie','cpudie'],d:'Not inside this machine. AMD builds the competing equivalents: the Instinct MI455X GPU (TSMC 2 nm compute chiplets, 12 HBM4 stacks, CoWoS-L) and the EPYC Venice CPU on TSMC 2 nm. The highlighted parts are the ones AMD’s versions replace.'},
+ {id:'tsmc',n:'TSMC',tk:'2330 TT',cc:'TW',cat:'fab',parts:['gpudie','sm','l2','hbmphy','d2d','nvl6chip','c2cchip','tensor','cuda','regfile','l1','interposer','cpudie','cpucore','l3','scf','memctl','pcie','hbmbase'],d:'Makes every logic die here: both Rubin dies on N3P, the I/O chiplets and the Vera CPU. It also makes the HBM4 base dies for SK hynix (12 nm-class), then assembles GPU and HBM on its CoWoS-L interposer.'},
+ {id:'skh',n:'SK hynix',tk:'000660 KS',cc:'KR',cat:'mem',parts:['dram','tsv','hbmbase','socamm'],d:'The HBM leader with about 50% share in Q2 2026. Its HBM4 is in mass production on TSMC-made base dies, and it has mass-produced 192 GB SOCAMM2 modules for Vera Rubin since April 2026.'},
+ {id:'sec',n:'Samsung Electronics',tk:'005930 KS',cc:'KR',cat:'mem',parts:['dram','tsv','hbmbase','socamm'],d:'Builds HBM4 with base dies from its own Samsung Foundry. Per TrendForce, it was the first to qualify HBM4 for Rubin, and it is reportedly the largest SOCAMM2 supplier for 2026.'},
+ {id:'mu',n:'Micron',tk:'MU US',cc:'US',cat:'mem',parts:['dram','tsv','hbmbase','socamm'],d:'The only US HBM maker. It was first to sample 256 GB SOCAMM2 modules (March 2026), and TSMC will make its HBM4E base dies from 2027.'},
+ {id:'asml',n:'ASML',tk:'ASML NA',cc:'NL',cat:'tools',parts:['gpudie','cpudie','nvl6chip','c2cchip','dram'],d:'The only maker of EUV lithography machines, used to print the logic dies at TSMC and the most advanced DRAM layers.'},
+ {id:'hanmi',n:'Hanmi Semiconductor',tk:'042700 KS',cc:'KR',cat:'tools',parts:['dram','tsv'],d:'Its thermo-compression bonders stack and join the 12 DRAM layers of each HBM tower.'},
+ {id:'snps',n:'Synopsys',tk:'SNPS US',cc:'US',cat:'tools',parts:['gpudie','cpudie','hbmphy','pcie'],d:'Chip-design (EDA) software and interface IP, such as HBM4 and PCIe 6 controllers, used across the industry for chips like these.'},
+ {id:'cdns',n:'Cadence',tk:'CDNS US',cc:'US',cat:'tools',parts:['gpudie','cpudie','hbmphy','interposer'],d:'EDA software for chip and 3D-package design and verification.'},
+ {id:'advantest',n:'Advantest',tk:'6857 JT',cc:'JP',cat:'tools',parts:['dram','hbmbase','gpudie','cpudie'],d:'Testers that screen every HBM stack and logic die before assembly.'}
+];
+for(const s of SUP){ s.hex=CATS[s.cat][1]; s.col=new THREE.Color(s.hex); }
+for(const k in PARTS){ PARTS[k].sup=SUP.filter(s=>s.parts.includes(k)&&!s.rival); PARTS[k].rivals=SUP.filter(s=>s.parts.includes(k)&&s.rival); }
+const REGION={gpu:['gpudie','sm','l2','hbmphy','d2d','nvl6chip','c2cchip','interposer','tensor','cuda','regfile','l1','nvl6'],
+  mem:['hbmbase','dram','tsv','hbmphy','socamm','interposer'],cpu:['cpudie','cpucore','l3','scf','memctl','c2c','pcie','socamm']};
+
+/* ================= flows ================= */
+const SPRITE=spriteTex();
+function mkPoints(n,size){const geo=new THREE.BufferGeometry(),pos=new Float32Array(n*3),col=new Float32Array(n*3);
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const p=new THREE.Points(geo,new THREE.PointsMaterial({size,map:SPRITE,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true,toneMapped:false}));
+  p.frustumCulled=false;p.renderOrder=5;scene.add(p);return{p,pos,col,geo,n};}
+const arc=(a,b,h)=>{const m=a.clone().lerp(b,.5);m.y+=h;return new THREE.QuadraticBezierCurve3(a,m,b);};
+const hbmArcs=[]; for(const s of [-1,1]) for(const z of HBMZ) for(const o of [-.35,0,.35]) hbmArcs.push(arc(new THREE.Vector3(GX+s*3.7,.69,z+o),new THREE.Vector3(GX+s*2.92,.69,z*.92+o),.45));
+const d2dArcs=[]; for(let i=0;i<9;i++){ const z=-1.9+i*.475; d2dArcs.push(arc(new THREE.Vector3(GX-.16,.69,z),new THREE.Vector3(GX+.16,.69,z),.22)); }
+const tsvLines=[]; for(const s of [-1,1]) for(let i=0;i<8;i++){ const x=GX+s*3.7-.38+i*.108; tsvLines.push(new THREE.LineCurve3(new THREE.Vector3(x,.27,2.27),new THREE.Vector3(x,.68,2.27))); }
+const lpArcs=[]; for(const [row,zz] of [['b',socZ.b],['f',socZ.f]]) for(const mx of socX) for(const o of [-.15,.15]) lpArcs.push(arc(new THREE.Vector3(mx+o,.16,zz),new THREE.Vector3(CX+(mx-CX)*.8+o,.47,CZ+(row==='b'?-1.68:1.68)),.9));
+const FLOWS=[
+  {curves:hbmArcs,n:300,size:.12,color:new THREE.Color(0x3cf0ff),speed:.55,w:p=>p[0]+.12},
+  {curves:tsvLines,n:120,size:.08,color:new THREE.Color(0x3cf0ff),speed:.7,w:p=>p[0]+.1},
+  {curves:d2dArcs,n:110,size:.1,color:new THREE.Color(0xe9f6ff),speed:.8,w:p=>p[2]+.25*p[1]+.06},
+  {curves:nvlCurves,n:160,size:.11,color:new THREE.Color(0x6ee7a8),speed:.35,w:p=>p[2]+.05},
+  {curves:c2cCurves,n:220,size:.11,color:new THREE.Color(0xff5fd2),speed:.22,w:p=>p[3]+.06},
+  {curves:lpArcs,n:180,size:.1,color:new THREE.Color(0xffb21a),speed:.5,w:p=>p[3]+.06}
+];
+for(const f of FLOWS){ Object.assign(f,mkPoints(f.n,f.size)); f.seed=[...Array(f.n)].map(()=>({c:(rand()*f.curves.length)|0,u:rand(),sp:rnd(.8,1.2)})); f.clock=0; f.curves.forEach(c=>{c.arcLengthDivisions=40;}); }
+
+/* ================= labels ================= */
+const labelsEl=document.getElementById('labels');
+function supLine(p){const n=p.sup.map(s=>s.n.split(' (')[0]);return n.length?`<small>${n.slice(0,3).join(' · ')}${n.length>3?' +'+(n.length-3):''}</small>`:'';}
+const SMZ=['tensor','cuda','regfile','l1'];
+for(const p of Object.values(PARTS)){
+  const el=document.createElement('div'); el.className='lbl '+p.label.s; el.style.setProperty('--off',(p.label.o||60)+'px');
+  el.innerHTML=`<span class="ln"></span><span class="dot"></span><span class="tx">${p.name}${supLine(p)}</span>`;
+  labelsEl.appendChild(el); p.el=el; p.anchor=new THREE.Vector3(...p.label.a);
+}
+
+/* ================= interaction ================= */
+const tip=document.getElementById('tip'),ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
+let mouseIn=false,mx=0,my=0,hovered=null,dirty=false;
+renderer.domElement.addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY;mouse.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);mouseIn=true;dirty=true;});
+renderer.domElement.addEventListener('pointerleave',()=>{mouseIn=false;dirty=true;});
+const visibleChain=o=>{for(let x=o;x;x=x.parent)if(!x.visible)return false;return true;};
+const HOVER=new THREE.Color(0x2f7dff); let selCo=null,pinnedPart=null,T=0; const lastSt={};
+function applyHL(){
+  const pulse=.3+.4*(.5+.5*Math.sin(T*4));
+  for(const k in PARTS){
+    const st=k===hovered?'h':(selCo&&selCo.parts.includes(k))?'s':(pinnedPart===k?'p':'');
+    if(st===lastSt[k]&&st!=='s')continue; lastSt[k]=st;
+    const col=(st==='h'||st==='p')?HOVER:st==='s'?selCo.col:null, it=st==='h'?.7:st==='p'?.5:pulse;
+    for(const m of PARTS[k].meshes)for(const mt of(Array.isArray(m.material)?m.material:[m.material])){
+      if(!mt.emissive)continue; if(col){mt.emissive.copy(col);mt.emissiveIntensity=it;}else{mt.emissive.copy(mt.userData.e0);mt.emissiveIntensity=mt.userData.ei0;}
+    }
+    PARTS[k].el.classList.toggle('on',!!st);
+  }
+}
+function markRows(){const k=hovered||pinnedPart;for(const s of SUP)s.row.classList.toggle('hl',!!k&&s.parts.includes(k));}
+function pick(){
+  let k=null;
+  if(mouseIn){ray.setFromCamera(mouse,camera);const h=ray.intersectObjects(pickables,false).find(x=>visibleChain(x.object));if(h)k=h.object.userData.part;}
+  if(k!==hovered){hovered=k;markRows();}
+  if(k){const P=PARTS[k];tip.innerHTML=`<b>${P.name}</b> — ${P.info}`+(P.sup.length?`<div class="mb">Made by: ${P.sup.map(s=>s.n).join(' · ')}</div>`:'');
+    tip.style.opacity=1;const tw=tip.offsetWidth;tip.style.left=Math.min(mx+16,innerWidth-tw-10)+'px';tip.style.top=(my+18)+'px';renderer.domElement.style.cursor='pointer';}
+  else{tip.style.opacity=0;renderer.domElement.style.cursor='grab';}
+}
+const scList=document.getElementById('scList'),card=document.getElementById('card'),cbody=document.getElementById('cbody');
+for(const c in CATS){const h=document.createElement('div');h.className='cg';h.style.color=CATS[c][1];h.textContent=CATS[c][0];scList.appendChild(h);
+  for(const s of SUP.filter(x=>x.cat===c)){const r=document.createElement('div');r.className='co';r.style.setProperty('--c',s.hex);
+    r.innerHTML=`<i style="background:${s.hex};box-shadow:0 0 6px ${s.hex}"></i><span class="n">${s.n}</span><span class="tk">${s.tk}</span>`;
+    r.onclick=()=>{stopTour();selectCompany(selCo===s?null:s);};s.row=r;scList.appendChild(r);}}
+function selectCompany(s){selCo=s;for(const x of SUP)x.row.classList.toggle('sel',x===s);
+  if(s){pinnedPart=null;showCoCard(s);if(!exTarget)setExplode(1);s.row.scrollIntoView({block:'nearest',behavior:'smooth'});}else if(!pinnedPart)card.style.display='none';markRows();}
+function showCoCard(s){cbody.innerHTML=`<div class="cat" style="color:${s.hex}">${CATS[s.cat][0]}${tourTimer?` · tour ${tourI+1}/${TOUR.length}`:''}</div><h2>${s.n}</h2>
+  <div class="meta">${s.tk} · ${s.cc}</div><p>${s.d}</p><div class="pp">In this chip: ${[...new Set(s.parts)].map(p=>`<span>${PARTS[p].name}</span>`).join('')}</div>`;card.style.display='block';}
+function showPartCard(k){const P=PARTS[k];
+  cbody.innerHTML=`<div class="cat" style="color:#7fd0ff">Who makes it</div><h2>${P.name}</h2><p>${P.info}</p>`+((P.sup.length||P.rivals.length)?`<div class="chips">${[...P.sup,...P.rivals].map(s=>`<span data-id="${s.id}" style="border-color:${s.hex}55"><i style="background:${s.hex}"></i>${s.n} <em>${s.tk}</em></span>`).join('')}</div>`:'');
+  cbody.querySelectorAll('.chips span').forEach(el=>el.onclick=()=>selectCompany(SUP.find(x=>x.id===el.dataset.id)));card.style.display='block';}
+document.getElementById('cx').onclick=()=>{stopTour();pinnedPart=null;selectCompany(null);card.style.display='none';};
+let downXY=null;
+renderer.domElement.addEventListener('pointerdown',e=>{downXY=[e.clientX,e.clientY];});
+renderer.domElement.addEventListener('pointerup',e=>{if(!downXY)return;const d=Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1]);downXY=null;if(d>5)return;stopTour();
+  if(hovered){const k=hovered;selCo=null;for(const x of SUP)x.row.classList.remove('sel');pinnedPart=k;showPartCard(k);}else{pinnedPart=null;selectCompany(null);card.style.display='none';}markRows();});
+const TOUR=['nvda','tsmc','skh','sec','mu','arm','asml','hanmi','amd'];
+let tourI=-1,tourTimer=null;const bTour=document.getElementById('bTour');
+function stepTour(){tourI=(tourI+1)%TOUR.length;selectCompany(SUP.find(s=>s.id===TOUR[tourI]));}
+function startTour(){setExplode(1);setFocus('all');tourI=-1;tourTimer=setInterval(stepTour,5200);stepTour();bTour.textContent='■ Stop tour';}
+function stopTour(){if(tourTimer){clearInterval(tourTimer);tourTimer=null;bTour.textContent='▶ Supply-chain tour';}}
+bTour.onclick=()=>tourTimer?stopTour():startTour();
+
+let exTarget=0,exP=0;
+const bEx=document.getElementById('bExplode'),bRo=document.getElementById('bRotate');
+function setExplode(v){exTarget=v;bEx.textContent=v?'Assemble':'Explode';}
+bEx.onclick=()=>setExplode(exTarget?0:1);
+bRo.onclick=()=>{controls.autoRotate=!controls.autoRotate;bRo.textContent='Auto-rotate: '+(controls.autoRotate?'on':'off');bRo.classList.toggle('off',!controls.autoRotate);};
+
+/* camera focus presets */
+const FOCUS={all:{t:[.5,.6,-.2],te:[.5,1.3,-.2],p:[3,14,18.5],pe:[3,17,22]},gpu:{t:[GX,.9,0],te:[GX,2.2,0],p:[GX+5,8.5,9.5],pe:[GX+6.5,10.5,12]},
+  mem:{t:[GX+3.7,.8,1.2],te:[GX+5,1.3,.6],p:[GX+7.5,4.2,6.2],pe:[GX+10.5,6.2,10]},cpu:{t:[CX,.8,CZ],te:[CX,1.6,CZ],p:[CX+4.5,7.5,6.5],pe:[CX+6,9.5,9]}};
+let focusKey='all',camAnim=null;
+function setFocus(f){focusKey=f;document.querySelectorAll('#focus button').forEach(b=>b.classList.toggle('act',b.dataset.f===f));
+  const F=FOCUS[f],P=exTarget?F.pe:F.p;camAnim={t0:performance.now(),fromP:camera.position.clone(),fromT:controls.target.clone(),toP:new THREE.Vector3(...P),toT:new THREE.Vector3(...(exTarget?F.te:F.t))};}
+document.querySelectorAll('#focus button').forEach(b=>b.onclick=()=>setFocus(b.dataset.f));
+let lastEx=0;
+
+function applyView(){camera.aspect=innerWidth/innerHeight;camera.setViewOffset(innerWidth,innerHeight,innerWidth>1000?-80:-60,0,innerWidth,innerHeight);camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
+applyView(); addEventListener('resize',applyView);
+
+/* ================= animation ================= */
+const groupOrder=[...explodeGroups].sort((a,b)=>b.userData.ex.length()-a.userData.ex.length()); groupOrder.forEach((g,i)=>g.userData.k=i/(groupOrder.length-1));
+const phEls=[...document.querySelectorAll('.ph')]; const PH_LEN=5.5; const phW=[1,0,0,0];
+const tDark=new THREE.Color(0x07121f),tMid=new THREE.Color(0x19c8ff),tHot=new THREE.Color(0xffe2a0),cDark=new THREE.Color(0x120a20),cMid=new THREE.Color(0xb46bff),cHot=new THREE.Color(0xffd0ff);
+const tmpC=new THREE.Color(),tmpV=new THREE.Vector3();
+let last=performance.now();
+
+function frame(now){
+  const dt=clamp((now-last)/1000,0,.05); last=now; T+=dt;
+  // phases
+  const ph=Math.floor(T/PH_LEN)%4, pf=(T%PH_LEN)/PH_LEN;
+  for(let i=0;i<4;i++){ phW[i]+=((i===ph?1:0)-phW[i])*Math.min(1,dt*2.2); phEls[i].classList.toggle('on',i===ph); phEls[i].querySelector('i').style.width=(i===ph?pf*100:0)+'%'; }
+  // explode
+  const dir=Math.sign(exTarget-exP); if(dir) exP=clamp(exP+dir*dt*(dir>0?1/1.6:1/.75));
+  let eHbm=0;
+  for(const g of explodeGroups){ const l=clamp(exP*1.35-g.userData.k*.35); const v=exTarget?easeInOutCubic(l):easeOutCubic(l); g.position.copy(g.userData.ex).multiplyScalar(v); if(g===gHbmR) eHbm=v; }
+  for(const m of hbmLayers) m.position.y=m.userData.y0+eHbm*m.userData.layer*.09;
+  for(const r of tsvRods){ const h=.42+eHbm*12*.09; r.scale.y=h; r.position.y=.26+h/2; }
+  if(exTarget!==lastEx){ lastEx=exTarget; setFocus(focusKey); }
+  // SM zoom
+  const zs=clamp((exP-.45)/.55); smZoom.visible=zs>.01; smZoom.scale.setScalar(.2+.8*easeOutCubic(zs));
+  zoomLine.visible=smZoom.visible; if(zoomLine.visible){ const a=smSource.clone().add(gDies.position); zoomLine.geometry.setFromPoints([a,smZoom.position.clone().add(new THREE.Vector3(0,-.05,0))]); zoomLine.computeLineDistances(); zoomLine.material.opacity=.8*zs; }
+  // camera tween
+  if(camAnim){ const k=clamp((now-camAnim.t0)/1300), e=easeInOutCubic(k); camera.position.lerpVectors(camAnim.fromP,camAnim.toP,e); controls.target.lerpVectors(camAnim.fromT,camAnim.toT,e); if(k>=1) camAnim=null; }
+  // activity
+  const gpuLoad=clamp(.08+phW[1]*.95+phW[0]*.25+phW[2]*.2), cpuLoad=clamp(.1+phW[3]*.9+phW[0]*.1);
+  for(const tm of smTiles){const p=tm.userData.phase;for(let i=0;i<tm.count;i++){const v=clamp(gpuLoad*1.05+.3*Math.sin(T*2.2+p[i])-.15);
+    if(v<.65)tmpC.lerpColors(tDark,tMid,v/.65);else tmpC.lerpColors(tMid,tHot,(v-.65)/.35);tmpC.multiplyScalar(.5+v*.9);tm.setColorAt(i,tmpC);}tm.instanceColor.needsUpdate=true;}
+  for(const tm of cpuTiles){const p=tm.userData.phase;for(let i=0;i<tm.count;i++){const v=clamp(cpuLoad*1.05+.3*Math.sin(T*2.6+p[i])-.15);
+    if(v<.65)tmpC.lerpColors(cDark,cMid,v/.65);else tmpC.lerpColors(cMid,cHot,(v-.65)/.35);tmpC.multiplyScalar(.5+v*.9);tm.setColorAt(i,tmpC);}tm.instanceColor.needsUpdate=true;}
+  l2Glow.material.opacity=(phW[1]*.35+phW[0]*.2)*(.6+.4*Math.sin(T*6));
+  // flows
+  const fade=1-clamp(exP*3);
+  for(const f of FLOWS){ const w=f.w(phW)*fade; f.clock+=dt*f.speed*(.4+w);
+    for(let i=0;i<f.n;i++){ const s=f.seed[i],u=(s.u+f.clock*s.sp)%1; f.curves[s.c].getPointAt(u,tmpV); f.pos[i*3]=tmpV.x;f.pos[i*3+1]=tmpV.y+.01;f.pos[i*3+2]=tmpV.z;
+      const a=Math.pow(Math.sin(Math.PI*u),.6)*w; f.col[i*3]=f.color.r*a; f.col[i*3+1]=f.color.g*a; f.col[i*3+2]=f.color.b*a; }
+    f.geo.attributes.position.needsUpdate=true; f.geo.attributes.color.needsUpdate=true; }
+
+  controls.update();
+  if(dirty||controls.autoRotate||dir||camAnim){pick();dirty=false;}
+  applyHL();
+  // labels
+  const la=clamp((exP-.55)/.4);
+  for(const p of Object.values(PARTS)){
+    const g=SMZ.includes(p.key)?smZoom:p.labelGroup;
+    if(la<=.001||!g||!visibleChain(g)||(focusKey!=='all'&&!REGION[focusKey].includes(p.key))){p.el.style.opacity=0;continue;}
+    tmpV.copy(p.anchor); if(p.key==='dram'||p.key==='tsv') tmpV.y+=eHbm*6*.09; g.localToWorld(tmpV); tmpV.project(camera);
+    if(tmpV.z>1||Math.abs(tmpV.x)>1.1||Math.abs(tmpV.y)>1.1){p.el.style.opacity=0;continue;}
+    const px=(tmpV.x*.5+.5)*innerWidth, py=(-tmpV.y*.5+.5)*innerHeight;
+    if(py<72||py>innerHeight-70||(px<310&&innerWidth>1000)||(px>innerWidth-330&&py<400&&innerWidth>1000)){p.el.style.opacity=0;continue;}
+    p.el.style.transform=`translate(${px.toFixed(1)}px,${py.toFixed(1)}px)`; p.el.style.opacity=la;
+  }
+  renderer.render(scene,camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+<!-- Visitor stats (GoatCounter: no cookies, no personal data) -->
+<script data-goatcounter="https://stellar-superchip.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>
