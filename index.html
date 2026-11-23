@@ -269,8 +269,8 @@ def('hbmbase','HBM4 base logic die','The bottom die of each stack. It runs the D
 def('dram','HBM4 DRAM layers (12-high)','Twelve thinned DRAM dies stacked on top of each other. Eight stacks give the GPU 288 GB.',{a:[GX+4.17,.55,.75],s:'R',o:60});
 def('tsv','Through-silicon vias','Copper pillars carrying data and power straight through every DRAM layer.',{a:[GX+3.7,.47,2.25],s:'R',o:90});
 def('tensor','Tensor cores','Matrix-multiply engines that do the bulk of AI math, down to 4-bit NVFP4.',{a:[.55,.1,-.55],s:'R',o:130});
-def('cuda','CUDA cores','General-purpose ALUs for everything that isn’t a big matrix multiply.',{a:[-.55,.08,-.25],s:'L',o:120});
-def('regfile','Register file','The fastest memory on the chip, holding each thread’s working values.',{a:[-.95,.08,.55],s:'L',o:210});
+def('cuda','CUDA cores','General-purpose ALUs for everything that isn’t a big matrix multiply.',{a:[-.55,.08,-.95],s:'L',o:110});
+def('regfile','Register file','The fastest memory on the chip, holding each thread’s working values.',{a:[-.95,.08,.75],s:'L',o:60});
 def('l1','L1 cache / shared memory','A per-SM scratchpad where tiles of the matrices are staged for the tensor cores.',{a:[1.1,.08,1.3],s:'R',o:60});
 def('cpudie','Vera CPU die','A monolithic, NVIDIA-designed Arm-compatible CPU that orchestrates the GPUs and feeds them data.',{a:[CX+1.8,.35,CZ+1.2],s:'R',o:60});
 def('cpucore','Olympus CPU cores (×88)','Custom Arm-compatible cores with 2 MB of L2 each, 176 threads in total.',{a:[CX-.9,.47,CZ+.4],s:'L',o:170});
